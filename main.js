@@ -4,9 +4,8 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 const particlesArray = [];
-const numberOfParticles = 100;
-
-console.log(ctx);
+const numberOfParticles = 10;
+let hue = 0;
 
 window.addEventListener("resize", (event) => {
   canvas.width = window.innerWidth;
@@ -21,23 +20,28 @@ const mouse = {
 canvas.addEventListener("click", (event) => {
   mouse.x = event.x;
   mouse.y = event.y;
-  for (let i = 0; i < 10; i++) particlesArray.push(new Particle());
+  generateParticles();
 });
 
 canvas.addEventListener("mousemove", (event) => {
   mouse.x = event.x;
   mouse.y = event.y;
+  generateParticles();
 });
+
+function generateParticles() {
+  for (let i = 0; i < numberOfParticles; i++)
+    particlesArray.push(new Particle());
+}
 
 class Particle {
   constructor() {
     this.x = mouse.x;
     this.y = mouse.y;
-    //this.x = Math.random() * canvas.width;
-    //this.y = Math.random() * canvas.height;
     this.size = Math.random() * 5 + 1;
     this.speedX = Math.random() * 3 - 1.5;
     this.speedY = Math.random() * 3 - 1.5;
+    this.color = "hsl(" + hue + ", 100%, 50%)";
   }
 
   update() {
@@ -47,21 +51,31 @@ class Particle {
   }
 
   draw() {
-    ctx.fillStyle = "red";
+    ctx.fillStyle = this.color;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
     ctx.fill();
   }
 }
 
-class Effect {
-  constructor() {}
-}
-
 function handleParticles() {
   for (let i = 0; i < particlesArray.length; i++) {
     particlesArray[i].update();
     particlesArray[i].draw();
+    for (let j = i; j < particlesArray.length; j++) {
+      const dx = particlesArray[i].x - particlesArray[j].x;
+      const dy = particlesArray[i].y - particlesArray[j].y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance < 100) {
+        ctx.beginPath();
+        ctx.strokeStyle = particlesArray[i].color;
+        ctx.lineWidth = particlesArray[i].size / 10;
+        ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
+        ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
+        ctx.stroke();
+        ctx.closePath();
+      }
+    }
     if (particlesArray[i].size <= 0.3) {
       particlesArray.splice(i, 1);
       i--;
@@ -69,10 +83,10 @@ function handleParticles() {
   }
 }
 
-console.log(particlesArray);
 function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   handleParticles();
+  hue += 0.5;
   requestAnimationFrame(animate);
 }
 
